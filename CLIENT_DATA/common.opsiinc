@@ -1,0 +1,52 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/credits/
+requiredWinstVersion >= "4.11.4.3"
+
+DefVar $RegPathUninstall$
+DefVar $InstFile$
+DefVar $LogDir$
+DefVar $ProductId$
+DefVar $MinimumSpace$
+DefVar $InstallDir$
+DefVar $ExitCode$
+DefVar $CustomPostInstall$
+DefVar $CustomPostDeinstall$
+DefVar $DesktopIcon$
+DefVar $SearchPattern$
+DefVar $ProductName$
+DefVar $RegId$
+DefVar $PathToExe$
+DefVar $UninstallProgram$
+DefVar $INST_SystemType$
+DefVar $MSVersion$
+DefVar $ErrorMsg$
+DefVar $ProductVersion$
+DefStringlist $ResultList64$
+
+Set $LogDir$ = "%opsiLogDir%"
+
+Set $INST_SystemType$ = GetSystemType
+Set $MSVersion$	 = GetMsVersionInfo
+
+Set $ProductVersion$	= strPart("%installingProdVersion%", "1", calculate(strPos("%installingProdVersion%","-") + "-" + "1" ))
+
+; ----------------------------------------------------------------
+Set $ProductId$	        = "freecad"
+Set $ProductName$       = "FreeCAD"
+Set $MinimumSpace$	= "570 MB"
+Set $RegPathUninstall$	= "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+Set $InstFile$		= "FreeCad-" + $ProductVersion$ + ".exe"
+; ----------------------------------------------------------------
+
+setloglevel = 6
+
+include_append "section_sub_search_registry64_uninstall_keys.opsiinc"
+
+if not ($MSVersion$ = "6.1" OR $MSVersion$ = "10.0")
+	Logwarning "Only tested with windows 7 and 10! Please report to the maintainer successful installation on other windows versions."		
+endif
+if not ($INST_SystemType$ = "64 Bit System")
+	Logwarning "Only tested with 64 bit version! Please report to the maintainer successful installation on other windows versions."
+endif

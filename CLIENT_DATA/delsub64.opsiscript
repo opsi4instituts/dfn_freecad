@@ -1,0 +1,65 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib gmbh
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/credits/
+
+; Parameter: $SearchPattern$: Suchbegriff in Registry
+Set $SearchPattern$ = $ProductName$
+
+Sub_search_registry64_uninstall_keys
+; Rückgabewert: $ResultList$ gefundene Einträge
+
+Switch count ($ResultList64$)
+	Case "0"
+		comment "No installations of " + $SearchPattern$ + " found in registry"
+	EndCase
+	Case "1"
+		comment "Found one installation of " + $SearchPattern$ + " in registry, try to deinstall"
+		comment "Uninstalling found programs"
+		
+		Set $RegId$ = takeString(0, $ResultList64$)
+		Set $UninstallProgram$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] UninstallString")
+		Set $InstallDir$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] InstallLocation")
+		 
+		Winbatch_uninstall
+		sub_check_exitcode
+		
+		set $DesktopIcon$ = getProductProperty("desktopicon","no")
+	
+		if $DesktopIcon$ = "yes"
+			comment "Delete common desktop icon"
+			Linkfolder_uninstall_desktopicon
+		endif
+		
+		comment "include custom post install file"
+		set $CustomPostDeinstall$ = getProductProperty("custom-post-deinstall","none")
+		if not ($CustomPostDeinstall$ = "none")
+			if FileExists("%ScriptPath%\custom\" + $CustomPostDeinstall$)
+				include_insert "%ScriptPath%\custom\" + $CustomPostDeinstall$
+			endif
+		endif
+		
+		; löscht vielleicht vorhandene Überbleibsel des Programmes
+		if (Fileexists($InstallDir$))
+			Files_uninstall
+		endif
+	EndCase
+	DefaultCase
+		comment "found more than one installation in the registry, this is not expected for this script!"
+		isFatalError
+	EndCase
+EndSwitch
+
+[Winbatch_uninstall]
+$UninstallProgram$ /S
+
+[Files_uninstall]
+delete -sf $InstallDir$
+
+[Registry_uninstall]
+deletekey [$RegPathUninstall$\$RegId$]
+
+[Linkfolder_uninstall_desktopicon]
+set_basefolder common_desktopdirectory
+set_subfolder ""
+delete_element $ProductName$

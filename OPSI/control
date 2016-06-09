@@ -1,0 +1,99 @@
+[Package]
+version: 1
+depends: 
+incremental: False
+
+[Product]
+type: localboot
+id: dfn_freecad
+name: FreeCAD
+description: Open-Source-Programm für parametrische 3D-CAD-Modellierung (inkl. Modul Architektur)
+advice: 
+version: 0.16.6704
+priority: 0
+licenseRequired: False
+productClasses: 
+setupScript: setup64.opsiscript
+uninstallScript: uninstall64.opsiscript
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
+
+[ProductProperty]
+type: unicode
+name: desktopicon
+multivalue: False
+editable: False
+description: Icon on Desktop
+values: ["no", "yes"]
+default: ["no"]
+
+[ProductProperty]
+type: unicode
+name: custom-post-install
+multivalue: False
+editable: False
+description: Define filename for include script in custom directory after installation
+values: ["none", "post-install.opsiinc"]
+default: ["none"]
+
+[ProductProperty]
+type: unicode
+name: custom-post-deinstall
+multivalue: False
+editable: False
+description: Define filename for include script in custom directory after deinstallation
+values: ["none", "post-deinstall.opsiinc"]
+default: ["none"]
+
+[Changelog]
+dfn_freecad (0.16.6704-2)
+	* o4i-Logo
+	* Feinarbeiten für Start DFN-Paket
+	* neue Upstreamversion
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 08.06.2016
+
+dfn_freecad (0.16.6703-2)
+	* neue Upstreamversion
+-- Lukas Stapelbroek (archIT/KIT) <lukas.stapelbroek9@kit.edu>, 03.05.2016
+
+dfn_freecad (0.16.6700-1)
+	* Paket erzeugt
+-- Lukas Stapelbroek (archIT/KIT) <lukas.stapelbroek9@kit.edu>, 26.04.2016
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
