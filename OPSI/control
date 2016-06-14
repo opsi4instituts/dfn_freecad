@@ -1,5 +1,5 @@
 [Package]
-version: 1
+version: 2
 depends: 
 incremental: False
 
@@ -50,6 +50,10 @@ default: ["none"]
 
 [Changelog]
 dfn_freecad (0.16.6704-2)
+	* kleinere Fixes
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 14.06.2016
+
+dfn_freecad (0.16.6704-1)
 	* o4i-Logo
 	* Feinarbeiten für Start DFN-Paket
 	* neue Upstreamversion
