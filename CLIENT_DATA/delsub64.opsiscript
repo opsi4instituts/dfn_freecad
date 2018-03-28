@@ -1,11 +1,5 @@
-; Copyright (c) uib gmbh (www.uib.de)
-; This sourcecode is owned by uib gmbh
-; and published under the Terms of the General Public License.
-; credits: http://www.opsi.org/credits/
-
 ; Parameter: $SearchPattern$: Suchbegriff in Registry
 Set $SearchPattern$ = $ProductName$
-
 Sub_search_registry64_uninstall_keys
 ; Rückgabewert: $ResultList$ gefundene Einträge
 
@@ -24,11 +18,9 @@ Switch count ($ResultList64$)
 		Winbatch_uninstall
 		sub_check_exitcode
 		
-		set $DesktopIcon$ = getProductProperty("desktopicon","no")
-	
-		if $DesktopIcon$ = "yes"
-			comment "Delete common desktop icon"
-			Linkfolder_uninstall_desktopicon
+		if $DesktopLink$ = "true"
+			comment "Delete common desktop link"
+			Linkfolder_delete_desktoplink
 		endif
 		
 		comment "include custom post install file"
@@ -59,7 +51,7 @@ delete -sf $InstallDir$
 [Registry_uninstall]
 deletekey [$RegPathUninstall$\$RegId$]
 
-[Linkfolder_uninstall_desktopicon]
+[Linkfolder_delete_desktoplink]
 set_basefolder common_desktopdirectory
 set_subfolder ""
 delete_element $ProductName$
