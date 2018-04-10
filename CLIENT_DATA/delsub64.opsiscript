@@ -1,23 +1,45 @@
-; Parameter: $SearchPattern$: Suchbegriff in Registry
-Set $SearchPattern$ = $ProductName$
-Sub_search_registry64_uninstall_keys
-; Rückgabewert: $ResultList$ gefundene Einträge
+; Ergebnis ist StringList (mehrere Einträge möglich);
+Set $ResultList$ = SearchRegistryUninstallKeys($ProductId$)
+; erste Zeile ist Status, da momentan (!) eine Funktion immer einen Rückgabewert haben muss. Abschneiden...
+Set $ResultList$ = getSubList(1 : ,$ResultList$)
 
-Switch count ($ResultList64$)
+Switch count ($ResultList$)
 	Case "0"
-		comment "No installations of " + $SearchPattern$ + " found in registry"
+		comment "No installations of " + $ProductName$ + " found in registry"
 	EndCase
 	Case "1"
-		comment "Found one installation of " + $SearchPattern$ + " in registry, try to deinstall"
-		comment "Uninstalling found programs"
-		
-		Set $RegId$ = takeString(0, $ResultList64$)
-		Set $UninstallProgram$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] UninstallString")
-		Set $InstallDir$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] InstallLocation")
+		comment "Found one installation of " + $ProductName$ + " in registry, try to deinstall"
+
+		; Ergebnis z.B. "32|HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\winscp3_is1"
+		; Registry-Schlüssel inklusive Pfad, sowie Bereich (32 oder 64); deshalb zunächst aufsplitten
+		comment "Getting 'UninstallString' from Registry"
+		Set $RegBitScope$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegId$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))
+
+		if ($RegBitScope$ = "32")
+			Set $InstalledVersion$ = GetRegistryStringValue32("[" + $RegId$ + "] DisplayVersion")
+			Set $InstallDir$ = GetRegistryStringValue32("[" + $RegId$ + "] InstallLocation")
+			Set $UninstallProgram$ = GetRegistryStringValue32("[" + $RegId$ + "] UninstallString")
+		else
+			Set $InstalledVersion$ = GetRegistryStringValue64("[" + $RegId$ + "] DisplayVersion")
+			Set $InstallDir$ = GetRegistryStringValue64("[" + $RegId$ + "] InstallLocation")
+			Set $UninstallProgram$ = GetRegistryStringValue64("[" + $RegId$ + "] UninstallString")
+		endif
+		if not (FileExists($UninstallProgram$))
+			LogError "Suspicious! Found entry of installer in Registry, but $UninstallProgramm$ does not exist!?"
+			isFatalError
+		endif
+		; Versionsnummer ermitteln, falls 0.16.6712 dann 'uninstall.exe' austauschen, da die originale Version nicht silent
+		if contains($InstalledVersion$, "0.16.6712")
+			Files_repair-uninstaller
+		endif
 		 
 		Winbatch_uninstall
-		sub_check_exitcode
-		
+		Set $ExitCode$ = getLastExitCode
+		if (isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$) = "true")
+        	isFatalError
+        endif		
+				
 		if $DesktopLink$ = "true"
 			comment "Delete common desktop link"
 			Linkfolder_delete_desktoplink
@@ -48,8 +70,8 @@ $UninstallProgram$ /S
 [Files_uninstall]
 delete -sf $InstallDir$
 
-[Registry_uninstall]
-deletekey [$RegPathUninstall$\$RegId$]
+[Files_repair-uninstaller]
+copy "%ScriptPath%\uninstall.exe" $InstallDir$
 
 [Linkfolder_delete_desktoplink]
 set_basefolder common_desktopdirectory

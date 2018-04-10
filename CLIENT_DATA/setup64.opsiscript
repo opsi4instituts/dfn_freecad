@@ -7,17 +7,6 @@ if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
 	isFatalError
 	; Stop process and set installation status to failed
 else
-	; Workarsound für non-silent Uninstaller (Version 0.16.6712). Austausch von 'uninstall.exe' vor Deinstallation 
-	; Parameter: $SearchPattern$: Suchbegriff in Registry
-	Set $SearchPattern$ = $ProductName$
-	Sub_search_registry64_uninstall_keys
-	; Rückgabewert: $ResultList$ gefundene Einträge
-	if not ( count ($ResultList64$) = "0" )
-		Set $RegId$ = takeString(0, $ResultList64$)
-		Set $InstallDir$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] InstallLocation")
-		Files_repair-uninstaller
-	endif
-	
 	if FileExists("%ScriptPath%\delsub64.opsiscript")
 		comment "Start uninstall sub section"
 		Sub "%ScriptPath%\delsub64.opsiscript"
@@ -26,26 +15,36 @@ else
 	Message "Installing %installingProdName% (%installingProdVersion%) 64 Bit..."
 	comment "Starting the setup program"
 	Winbatch_install
-	sub_check_exitcode
-	
+	Set $ExitCode$ = getLastExitCode
+	if (isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$) = "true")
+       	isFatalError
+    endif		
+
 	comment "Test for installation success"
-	
-	; Parameter: $SearchPattern$: Suchbegriff in Registry
-	Set $SearchPattern$ = $ProductName$
-	
-	Sub_search_registry64_uninstall_keys
-	; Rückgabewert: $ResultList$ gefundene Einträge
-	
-	if ( count ($ResultList64$) = "0" )
-		logError "Fatal: After Installation " + $ProductName$ + " could not be found in " + $RegPathUninstall$
+
+	; Ergebnis ist StringList (mehrere Einträge möglich);
+	Set $ResultList$ = SearchRegistryUninstallKeys($ProductId$)
+	; erste Zeile ist Status, da momentan (!) eine Funktion immer einen Rückgabewert haben muss. Abschneiden...
+	Set $ResultList$ = getSubList(1 : ,$ResultList$)
+
+	if ( count ($ResultList$) = "0" )
+		logError "Fatal: After Installation " + $ProductName$ + " could not be found in registry"
 		isFatalError
 	else
-		Set $RegId$ = takeString(0, $ResultList64$)
-		comment "Get 'InstallLocation' from registry for path to exe"
-		Set $PathToExe$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] DisplayIcon")
-		; Workarsound für non-silent Uninstaller (Version 0.16.6712). Austausch von 'uninstall.exe'
-		Set $InstallDir$ = GetRegistryStringValue64("[" + $RegPathUninstall$ + "\" + $RegId$ + "] InstallLocation")
-		Files_repair-uninstaller		
+		Set $RegBitScope$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegId$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))		
+		
+		if ($RegBitScope$ = "64")
+			Set $InstalledVersion$ = GetRegistryStringValue64("[" + $RegId$ + "] DisplayVersion")
+			Set $PathToExe$ = GetRegistryStringValue64("[" + $RegId$ + "] DisplayIcon")	
+		else
+			LogError "RegBitScope has to be 64"
+			isFatalError
+		endif
+		if not (contains($InstalledVersion$, $ProductVersion$))
+			LogError "Wrong version number found, something went wrong."
+			isFatalError
+		endif
 		
 		if $DesktopLink$ = "true"
 			comment "Create common desktop link"
@@ -62,9 +61,6 @@ else
 	endif
 	
 endif
-
-[Files_repair-uninstaller]
-copy "%ScriptPath%\uninstall.exe" $InstallDir$
 
 [Winbatch_install]
 "%ScriptPath%\$InstFile$" /S
