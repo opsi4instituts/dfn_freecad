@@ -1,7 +1,7 @@
 ; Ergebnis ist StringList (mehrere Einträge möglich);
+; in einer Zeile werden drei Ergebnisse mit "|" abgetrennt geliefert: Registrykey (mit Pfad) | Bereich Registry (kann direkt getRegistryValue übergeben werden | DisplayName
+; z.B. HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Test64|64bit|Test Registry Entry64
 Set $ResultList$ = SearchRegistryUninstallKeys($ProductId$)
-; erste Zeile ist Status, da momentan (!) eine Funktion immer einen Rückgabewert haben muss. Abschneiden...
-Set $ResultList$ = getSubList(1 : ,$ResultList$)
 
 Switch count ($ResultList$)
 	Case "0"
@@ -10,21 +10,14 @@ Switch count ($ResultList$)
 	Case "1"
 		comment "Found one installation of " + $ProductName$ + " in registry, try to deinstall"
 
-		; Ergebnis z.B. "32|HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\winscp3_is1"
-		; Registry-Schlüssel inklusive Pfad, sowie Bereich (32 oder 64); deshalb zunächst aufsplitten
 		comment "Getting 'UninstallString' from Registry"
-		Set $RegBitScope$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
-		Set $RegId$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegId$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegBitScope$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))
 
-		if ($RegBitScope$ = "32")
-			Set $InstalledVersion$ = GetRegistryStringValue32("[" + $RegId$ + "] DisplayVersion")
-			Set $InstallDir$ = GetRegistryStringValue32("[" + $RegId$ + "] InstallLocation")
-			Set $UninstallProgram$ = GetRegistryStringValue32("[" + $RegId$ + "] UninstallString")
-		else
-			Set $InstalledVersion$ = GetRegistryStringValue64("[" + $RegId$ + "] DisplayVersion")
-			Set $InstallDir$ = GetRegistryStringValue64("[" + $RegId$ + "] InstallLocation")
-			Set $UninstallProgram$ = GetRegistryStringValue64("[" + $RegId$ + "] UninstallString")
-		endif
+		Set $InstalledVersion$ = GetRegistryValue($RegId$, "DisplayVersion", $RegBitScope$)
+		Set $InstallDir$ = GetRegistryValue($RegId$, "InstallLocation", $RegBitScope$)
+		
+		Set $UninstallProgram$ = GetRegistryValue($RegId$, "UninstallString", $RegBitScope$)
 		if not (FileExists($UninstallProgram$))
 			LogError "Suspicious! Found entry of installer in Registry, but $UninstallProgramm$ does not exist!?"
 			isFatalError
@@ -36,7 +29,7 @@ Switch count ($ResultList$)
 		 
 		Winbatch_uninstall
 		Set $ExitCode$ = getLastExitCode
-		if (isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$) = "true")
+		if stringToBool(isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$))
         	isFatalError
         endif		
 				

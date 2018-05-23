@@ -16,31 +16,26 @@ else
 	comment "Starting the setup program"
 	Winbatch_install
 	Set $ExitCode$ = getLastExitCode
-	if (isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$) = "true")
+	if stringToBool(isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$))
        	isFatalError
     endif		
 
 	comment "Test for installation success"
-
 	; Ergebnis ist StringList (mehrere Einträge möglich);
+	; in einer Zeile werden drei Ergebnisse mit "|" abgetrennt geliefert: Registrykey (mit Pfad) | Bereich Registry (kann direkt getRegistryValue übergeben werden | DisplayName
+	; z.B. HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Test64|64bit|Test Registry Entry64
 	Set $ResultList$ = SearchRegistryUninstallKeys($ProductId$)
-	; erste Zeile ist Status, da momentan (!) eine Funktion immer einen Rückgabewert haben muss. Abschneiden...
-	Set $ResultList$ = getSubList(1 : ,$ResultList$)
-
+	
 	if ( count ($ResultList$) = "0" )
 		logError "Fatal: After Installation " + $ProductName$ + " could not be found in registry"
 		isFatalError
 	else
-		Set $RegBitScope$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
-		Set $RegId$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))		
+		Set $RegId$ = takeString (0,splitString(takeString(0,$ResultList$), '|'))
+		Set $RegBitScope$ = takeString (1,splitString(takeString(0,$ResultList$), '|'))
 		
-		if ($RegBitScope$ = "64")
-			Set $InstalledVersion$ = GetRegistryStringValue64("[" + $RegId$ + "] DisplayVersion")
-			Set $PathToExe$ = GetRegistryStringValue64("[" + $RegId$ + "] DisplayIcon")	
-		else
-			LogError "RegBitScope has to be 64"
-			isFatalError
-		endif
+		Set $InstalledVersion$ = GetRegistryValue($RegId$, "DisplayVersion", $RegBitScope$)
+		Set $PathToExe$ = GetRegistryValue($RegId$, "DisplayIcon", $RegBitScope$)
+
 		if not (contains($InstalledVersion$, $ProductVersion$))
 			LogError "Wrong version number found, something went wrong."
 			isFatalError
