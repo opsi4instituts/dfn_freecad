@@ -18,7 +18,7 @@ else
 	Set $ExitCode$ = getLastExitCode
 	if stringToBool(isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$))
        	isFatalError
-    endif		
+    endif
 
 	comment "Test for installation success"
 	; Ergebnis ist StringList (mehrere Einträge möglich);

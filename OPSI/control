@@ -1,7 +1,6 @@
 [Package]
 version: 1
 depends: 
-incremental: False
 
 [Product]
 type: localboot
@@ -9,7 +8,7 @@ id: dfn_freecad
 name: FreeCAD
 description: Open-Source-Programm für parametrische 3D-CAD-Modellierung (inkl. Modul Architektur)
 advice: 
-version: 0.17.13522
+version: 0.17.13528
 priority: 0
 licenseRequired: False
 productClasses: 
@@ -46,6 +45,10 @@ values: ["none", "post-deinstall.opsiinc"]
 default: ["none"]
 
 [Changelog]
+dfn_freecad (0.17.13528-1)
+	* neue Upstreamversion (Bugfix)
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 30.07.2018
+
 dfn_freecad (0.17.13522-1)
 	* neue Upstreamversion (Bugfix)
 	* Fix für isInnoExitcodeFatal (uib_exitcode)
