@@ -8,7 +8,7 @@ id: dfn_freecad
 name: FreeCAD
 description: Open-Source-Programm für parametrische 3D-CAD-Modellierung (inkl. Modul Architektur)
 advice: 
-version: 0.17.13528
+version: 0.17.13541
 priority: 0
 licenseRequired: False
 productClasses: 
@@ -45,6 +45,11 @@ values: ["none", "post-deinstall.opsiinc"]
 default: ["none"]
 
 [Changelog]
+dfn_freecad (0.17.13541-1)
+	* neue Upstreamversion
+	* neues o4i-Logo (opsi4institutes)
+ -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 13.09.2018
+
 dfn_freecad (0.17.13528-1)
 	* neue Upstreamversion (Bugfix)
  -- Thomas Besser (archIT/KIT) <thomas.besser@kit.edu>, 30.07.2018
