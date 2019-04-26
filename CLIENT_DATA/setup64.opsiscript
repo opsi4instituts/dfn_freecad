@@ -17,8 +17,8 @@ else
 	Winbatch_install
 	Set $ExitCode$ = getLastExitCode
 	if stringToBool(isNSISExitcodeFatal($ExitCode$, "True", $ErrorString$))
-       	isFatalError
-    endif
+    		isFatalError
+    	endif
 
 	comment "Test for installation success"
 	; Ergebnis ist StringList (mehrere Einträge möglich);
@@ -36,7 +36,7 @@ else
 		Set $InstalledVersion$ = GetRegistryValue($RegId$, "DisplayVersion", $RegBitScope$)
 		Set $PathToExe$ = GetRegistryValue($RegId$, "DisplayIcon", $RegBitScope$)
 
-		if not (contains($InstalledVersion$, $ProductVersion$))
+		if not (contains($ProductVersion$, $InstalledVersion$))
 			LogError "Wrong version number found, something went wrong."
 			isFatalError
 		endif
@@ -58,7 +58,7 @@ else
 endif
 
 [Winbatch_install]
-"%ScriptPath%\$InstFile$" /S
+"$InstFile$" /S
 
 [Linkfolder_create_desktoplink]
 set_basefolder common_desktopdirectory

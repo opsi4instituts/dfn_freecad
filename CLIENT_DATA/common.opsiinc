@@ -1,4 +1,4 @@
-requiredWinstVersion >= "4.12.0.13"
+requiredWinstVersion >= "4.12.0.16"
 
 DefVar $InstFile$
 DefVar $LogDir$
@@ -20,6 +20,8 @@ DefVar $ErrorString$
 DefVar $ProductVersion$
 DefVar $InstalledVersion$
 DefStringlist $ResultList$
+DefStringList $InstFileList$
+DefVar $SearchTerm$
 
 Set $LogDir$ = "%opsiLogDir%"
 
@@ -35,12 +37,26 @@ Set $ProductName$       = "FreeCAD"
 Set $MinimumSpace$	= "570 MB"
 ; ----------------------------------------------------------------
 
-setloglevel = 6
-
 ; exitcode library von UIB (siehe C:\program files(x86)\opsi.org\opsi-client-agent\opsi-winst\lib) mit 'local functions'
 importLib "uib_exitcode.opsiscript::isNsisExitcodeFatal"
-; Library registry search uninstall keys (local functions)
-importLib "func_search_registry_uninstall_keys.opsiinc"
+; Library registry actions (local functions)
+importLib "lib_registry_functions.opsiinc::SearchRegistryUninstallKeys"
+; Library file actions (local functions)
+importLib "lib_file_functions.opsiinc::findFileNameFromPath"
+
+; suche Installer im %ScriptPath% und liefere den Pfad, wegen sich immer ändernder Buildnumber
+Set $SearchTerm$ = $ProductId$ + "*-win-x64-installer.exe"
+Set $InstFileList$ = findFileNameFromPath($SearchTerm$, "%ScriptPath%")
+if not (count($InstFileList$) = "1")
+	LogError "Obviously the maintainer forgot to delete an old installer file!!!"
+	isFatalError
+endif
+; nur den letzten und einzigsten ;-) Treffer nehmen
+Set $InstFile$ = takeString(-1,$InstFileList$)
+if not (contains($InstFile$, $ProductVersion$))
+	LogError "Can not find $ProductVersion$ in $InstFile$!!!"
+	isFatalError
+endif
 
 if not ($MSVersion$ = "6.1" OR $MSVersion$ = "10.0")
 	Logwarning "Only tested with windows 7 and 10! Please report to the maintainer successful installation on other windows versions."		
@@ -48,18 +64,6 @@ endif
 if not ($INST_SystemType$ = "64 Bit System")
 	LogError "At the moment a 32 bit version is not included in this packet!"
 	isFatalError
-endif
-
-DefFunc getInstfileNameFromScriptPath(val $SearchTerm$ : string) : string
-	DefStringList $list$
-	Set $list$ = ShellCall('dir /b %ScriptPath%\' + $SearchTerm$)
-	set $result$ = takeString(-1,$list$)
-endfunc
-
-Set $InstFile$ = getInstfileNameFromScriptPath($ProductId$ + "*.exe")
-if not (contains($InstFile$, $ProductVersion$))
-	LogError "Installfile does not contain version number."
-	isFatalError 
 endif
 
 comment "Show product picture"
